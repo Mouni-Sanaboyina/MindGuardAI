@@ -1,0 +1,11 @@
+flask
+flask-cors
+nltk
+openai-whisper
+torch
+torchvision
+pillow
+ftfy
+regex
+tqdm
+git+https://github.com/openai/CLIP.git

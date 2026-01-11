@@ -15,13 +15,10 @@ CORS(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ---------------- FFMPEG (WINDOWS) ----------------
-FFMPEG_PATH = r"C:\Users\mouni\ffmpeg-2026-01-07-git-af6a1dd0b2-essentials_build\bin"
-os.environ["PATH"] += os.pathsep + FFMPEG_PATH
-
-# ---------------- LOAD MODELS ----------------
+# ---------------- NLTK ----------------
 nltk.download("punkt")
 
+# ---------------- LOAD MODELS ----------------
 print("Loading Whisper...")
 asr_model = whisper.load_model("base")
 print("Whisper ready")
@@ -54,7 +51,10 @@ def analyze_text(text):
         count = sum(1 for w in tokens if w in words)
         if count > 0:
             tags.append(category)
-            score += min(count * CATEGORY_WEIGHT[category], CATEGORY_WEIGHT[category])
+            score += min(
+                count * CATEGORY_WEIGHT[category],
+                CATEGORY_WEIGHT[category]
+            )
 
     return min(score, 100), tags
 
@@ -77,7 +77,9 @@ IMAGE_PROMPTS = {
 }
 
 def analyze_image(image_path):
-    image = clip_preprocess(Image.open(image_path).convert("RGB")).unsqueeze(0).to(DEVICE)
+    image = clip_preprocess(
+        Image.open(image_path).convert("RGB")
+    ).unsqueeze(0).to(DEVICE)
 
     texts, labels = [], []
     for label, prompts in IMAGE_PROMPTS.items():
@@ -94,19 +96,18 @@ def analyze_image(image_path):
         img_features /= img_features.norm(dim=-1, keepdim=True)
         txt_features /= txt_features.norm(dim=-1, keepdim=True)
 
-        similarities = (img_features @ txt_features.T).squeeze(0)
+        sims = (img_features @ txt_features.T).squeeze(0)
 
     scores = {}
     for i, label in enumerate(labels):
-        scores[label] = max(scores.get(label, -1), similarities[i].item())
+        scores[label] = max(scores.get(label, -1), sims[i].item())
 
     scores = {k: round((v + 1) / 2, 3) for k, v in scores.items()}
 
-    danger_score = max(scores.get("Violence", 0), scores.get("Blood", 0))
-    safe_score = scores.get("Safe", 0)
+    danger = max(scores.get("Violence", 0), scores.get("Blood", 0))
+    safe = scores.get("Safe", 0)
 
-    blur_required = danger_score > 0.6 and danger_score > safe_score
-
+    blur_required = danger > 0.6 and danger > safe
     return scores, blur_required
 
 # ---------------- BLUR ----------------
@@ -127,31 +128,23 @@ def analyze():
     file = request.files.get("file")
     text_input = request.form.get("text", "").strip()
 
-    transcript = ""
-
     # -------- AUDIO --------
     if file and file.filename.lower().endswith((".mp3", ".wav", ".m4a")):
         path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(path)
 
-        try:
-            result = asr_model.transcribe(path, fp16=False)
-            transcript = result["text"]
-        except Exception as e:
-            return jsonify({
-                "error": "Audio transcription failed",
-                "details": str(e)
-            }), 500
+        result = asr_model.transcribe(path, fp16=False)
+        transcript = result.get("text", "").strip()
 
-        risk_score, tags = analyze_text(transcript)
+        score, tags = analyze_text(transcript)
 
         return jsonify({
-            "risk_score": risk_score,
-            "risk_level": "High" if risk_score >= 70 else "Medium" if risk_score >= 30 else "Low",
-            "summary": "Potentially harmful content detected" if risk_score >= 30 else "Content appears safe",
+            "risk_score": score,
+            "risk_level": "High" if score >= 70 else "Medium" if score >= 30 else "Low",
+            "summary": "Potentially harmful content detected" if score >= 30 else "Content appears safe",
             "tags": tags,
             "transcribed_text": transcript,
-            "ai_explanation": "Audio transcribed using Whisper ASR and analyzed using NLP-based risk scoring"
+            "ai_explanation": "Audio transcribed using Whisper and analyzed using NLP"
         })
 
     # -------- IMAGE --------
@@ -173,19 +166,20 @@ def analyze():
 
     # -------- TEXT --------
     if text_input:
-        risk_score, tags = analyze_text(text_input)
+        score, tags = analyze_text(text_input)
 
         return jsonify({
-            "risk_score": risk_score,
-            "risk_level": "High" if risk_score >= 70 else "Medium" if risk_score >= 30 else "Low",
-            "summary": "Potentially harmful content detected" if risk_score >= 30 else "Content appears safe",
+            "risk_score": score,
+            "risk_level": "High" if score >= 70 else "Medium" if score >= 30 else "Low",
+            "summary": "Potentially harmful content detected" if score >= 30 else "Content appears safe",
             "tags": tags,
             "transcribed_text": text_input,
-            "ai_explanation": "Text analyzed using NLP-based risk scoring"
+            "ai_explanation": "Text analyzed using NLP keyword risk scoring"
         })
 
     return jsonify({"error": "Unsupported or empty input"}), 400
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
