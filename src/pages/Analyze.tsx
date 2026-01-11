@@ -5,48 +5,33 @@ import {
   Mic,
   Image as ImageIcon,
   FileText,
-  AlertTriangle,
   Shield,
   Eye,
   EyeOff,
 } from "lucide-react";
 
 export default function Analyze() {
-  // ✅ STATES (ALL INSIDE COMPONENT)
-  const [sensitivity, setSensitivity] = useState("general");
   const [uploadType, setUploadType] = useState<string | null>(null);
-
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Image safety
+  const [showOriginal, setShowOriginal] = useState(false);
 
-  // 🔒 SAFETY STATES
-  const [consentGiven, setConsentGiven] = useState(false);
-  const [viewingSensitive, setViewingSensitive] = useState(false);
-const isAudio =
-  uploadType === "audio" &&
-  result?.original_preview_url;
-
-  // ✅ ANALYZE HANDLER
+  // ---------------- ANALYZE ----------------
   const handleAnalyze = async () => {
     if (!uploadType) return;
 
     setLoading(true);
     setResult(null);
-    setPreviewUrl(null);
-
-    // 🔁 RESET SAFETY STATES FOR NEW ANALYSIS
-    setConsentGiven(false);
-    setViewingSensitive(false);
+    setShowOriginal(false);
 
     const formData = new FormData();
     if (file) formData.append("file", file);
     if (text) formData.append("text", text);
-    formData.append("sensitivity", sensitivity);
 
     try {
       const res = await fetch("http://127.0.0.1:5000/analyze", {
@@ -56,17 +41,6 @@ const isAudio =
 
       const data = await res.json();
       setResult(data);
-
-      // 🔒 SAFETY-FIRST DEFAULT PREVIEW
-      if (data.blur_required) {
-        setPreviewUrl(
-          `http://127.0.0.1:5000${data.blurred_preview_url}`
-        );
-      } else {
-        setPreviewUrl(
-          `http://127.0.0.1:5000${data.original_preview_url}`
-        );
-      }
     } catch (err) {
       console.error("Analysis failed", err);
     }
@@ -74,161 +48,173 @@ const isAudio =
     setLoading(false);
   };
 
-  const riskScore = result?.risk_score ?? 0;
-  const riskLevel =
-    riskScore < 30 ? "safe" : riskScore < 70 ? "caution" : "high";
+  const imageUrl =
+    result?.original_preview_url &&
+    `http://127.0.0.1:5000${result.original_preview_url}`;
 
+  // ---------------- UI ----------------
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Analyze Content
-          </h1>
-          <p className="text-lg text-gray-600">
-            Pre-screen content and receive safety warnings before viewing
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-6xl mx-auto px-4">
+
+        <h1 className="text-3xl font-bold text-center mb-10">
+          Analyze Content
+        </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
           {/* LEFT PANEL */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-xl font-semibold mb-6">Upload Content</h2>
+          <div className="bg-white p-6 rounded-xl shadow space-y-6">
+            <h2 className="font-semibold text-lg">Upload Content</h2>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                {[
-                  { id: "video", icon: Video, label: "Video" },
-                  { id: "audio", icon: Mic, label: "Audio" },
-                  { id: "image", icon: ImageIcon, label: "Image" },
-                  { id: "text", icon: FileText, label: "Text" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setUploadType(item.id)}
-                    className={`p-6 rounded-xl border-2 transition-all ${
-                      uploadType === item.id
-                        ? "border-teal-500 bg-teal-50"
-                        : "border-gray-200 hover:border-teal-300"
-                    }`}
-                  >
-                    <item.icon className="h-8 w-8 mx-auto mb-2 text-gray-500" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {uploadType && uploadType !== "text" && (
-                <label className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer block">
-                  <Upload className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p className="text-gray-600 mb-1">
-                    Click to upload {uploadType}
-                  </p>
-                  {file && (
-                    <p className="text-sm text-green-600 mt-2">
-                      Selected: {file.name}
-                    </p>
-                  )}
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) =>
-                      setFile(e.target.files ? e.target.files[0] : null)
-                    }
-                  />
-                </label>
-              )}
-
-              {uploadType === "text" && (
-                <textarea
-                  className="w-full mt-4 p-4 border-2 rounded-xl"
-                  rows={4}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Paste text here..."
-                />
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { id: "video", icon: Video },
+                { id: "audio", icon: Mic },
+                { id: "image", icon: ImageIcon },
+                { id: "text", icon: FileText },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setUploadType(t.id);
+                    setFile(null);
+                    setText("");
+                    setResult(null);
+                  }}
+                  className={`p-4 border rounded-lg ${
+                    uploadType === t.id
+                      ? "border-teal-500 bg-teal-50"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <t.icon className="mx-auto" />
+                  <p className="text-sm mt-2 capitalize">{t.id}</p>
+                </button>
+              ))}
             </div>
+
+            {/* FILE UPLOAD */}
+            {uploadType && uploadType !== "text" && (
+              <label className="block border-dashed border-2 rounded-lg p-6 text-center cursor-pointer">
+                <Upload className="mx-auto mb-2" />
+                {file ? (
+                  <p className="text-green-600">{file.name}</p>
+                ) : (
+                  <p>Click to upload {uploadType}</p>
+                )}
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) =>
+                    setFile(e.target.files ? e.target.files[0] : null)
+                  }
+                />
+              </label>
+            )}
+
+            {/* TEXT INPUT */}
+            {uploadType === "text" && (
+              <textarea
+                rows={5}
+                className="w-full border rounded-lg p-3"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Paste text here..."
+              />
+            )}
 
             <button
               onClick={handleAnalyze}
               disabled={loading || !uploadType}
-              className={`w-full py-4 rounded-xl font-semibold text-lg ${
-                loading
-                  ? "bg-gray-400 text-white"
-                  : "bg-gradient-to-r from-teal-500 to-cyan-600 text-white"
-              }`}
+              className="w-full bg-teal-600 text-white py-3 rounded-lg font-semibold"
             >
               {loading ? "Analyzing..." : "Analyze Content"}
             </button>
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="space-y-6">
+          <div className="bg-white p-6 rounded-xl shadow space-y-6">
             {!result ? (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <Shield className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500">
-                  Results will appear after analysis
-                </p>
+              <div className="text-center text-gray-400">
+                <Shield className="mx-auto mb-3" />
+                Results will appear here
               </div>
             ) : (
               <>
-                {/* PREVIEW CARD */}
-                {/* CONTENT PREVIEW */}
-{previewUrl && (
-  <div className="bg-white rounded-2xl shadow-lg p-8">
-    <h3 className="font-semibold mb-4">Content Preview</h3>
+                <h3 className="font-semibold text-lg">Analysis Result</h3>
 
-    {/* IMAGE PREVIEW */}
-    {uploadType === "image" && (
-      <img
-        src={previewUrl}
-        alt="Preview"
-        className="max-h-64 mx-auto rounded-lg shadow mb-4"
-      />
-    )}
+                {/* IMAGE PREVIEW */}
+                {uploadType === "image" && imageUrl && (
+                  <>
+                    <img
+                      src={imageUrl}
+                      className={`mx-auto rounded-lg max-h-64 ${
+                        result.blur_required && !showOriginal ? "blur-xl" : ""
+                      }`}
+                    />
 
-    {/* AUDIO PREVIEW */}
-    {uploadType === "audio" && (
-      <div className="bg-gray-100 rounded-lg p-6 text-center mb-4">
-        🎧 Audio content detected
-      </div>
-    )}
+                    {result.blur_required && (
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={() => setShowOriginal(!showOriginal)}
+                          className="px-6 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2"
+                        >
+                          {showOriginal ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showOriginal ? "Hide Image" : "View Original"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
 
-    {(result.blur_required || viewingSensitive) && (
-      <div className="mb-4 bg-red-50 border border-red-300 rounded-lg p-4 text-sm text-red-800">
-        ⚠️ This content has been flagged as sensitive.
-        {viewingSensitive
-          ? " You are currently accessing sensitive audio content."
-          : " Playback is restricted to prevent accidental exposure."}
-      </div>
-    )}
+                {/* TEXT / AUDIO */}
+                {result.transcribed_text && (
+                  <div>
+                    <p className="font-semibold mb-1">
+                      {uploadType === "audio"
+                        ? "Transcribed Audio"
+                        : "Analyzed Text"}
+                    </p>
+                    <div className="bg-gray-100 p-3 rounded-lg text-sm whitespace-pre-wrap">
+                      {result.transcribed_text}
+                    </div>
+                  </div>
+                )}
 
-    <div className="flex gap-3 justify-center">
-      {result.blur_required && !consentGiven && (
-        <button
-          onClick={() => setConsentGiven(true)}
-          className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold"
-        >
-          ⚠️ Proceed with Caution
-        </button>
-      )}
+                {/* SUMMARY */}
+                <div
+                  className={`p-4 rounded-lg text-sm font-medium ${
+                    result.risk_score >= 30
+                      ? "bg-red-50 text-red-800 border border-red-300"
+                      : "bg-green-50 text-green-800 border border-green-300"
+                  }`}
+                >
+                  {result.summary}
+                </div>
 
-      {consentGiven && uploadType === "audio" && (
-        <audio controls className="w-full max-w-md">
-          <source
-            src={`http://127.0.0.1:5000${result.original_preview_url}`}
-          />
-        </audio>
-      )}
-    </div>
-  </div>
-)}
+                {/* TAGS */}
+                {result.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {result.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
+                {/* EXPLANATION */}
+                <div className="text-xs text-gray-500">
+                  {result.ai_explanation}
+                </div>
               </>
             )}
           </div>
+
         </div>
       </div>
     </div>

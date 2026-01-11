@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
-from PIL import Image, ImageFilter
 import nltk
+import whisper
+import torch
+import clip
+from PIL import Image, ImageFilter
 from nltk.tokenize import word_tokenize
 
 # ---------------- SETUP ----------------
@@ -12,11 +15,27 @@ CORS(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ---------------- AI CONFIG ----------------
+# ---------------- FFMPEG (WINDOWS) ----------------
+FFMPEG_PATH = r"C:\Users\mouni\ffmpeg-2026-01-07-git-af6a1dd0b2-essentials_build\bin"
+os.environ["PATH"] += os.pathsep + FFMPEG_PATH
+
+# ---------------- LOAD MODELS ----------------
+nltk.download("punkt")
+
+print("Loading Whisper...")
+asr_model = whisper.load_model("base")
+print("Whisper ready")
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print("Loading CLIP...")
+clip_model, clip_preprocess = clip.load("ViT-B/32", device=DEVICE)
+print("CLIP ready")
+
+# ---------------- NLP CONFIG ----------------
 RISK_KEYWORDS = {
-    "Violence": ["kill", "attack", "blood", "fight", "gun", "weapon"],
+    "Violence": ["kill", "stab", "attack", "blood", "fight", "gun", "knife"],
     "Harassment": ["hate", "idiot", "stupid", "abuse"],
-    "Self Harm": ["suicide", "die", "cut", "self-harm"],
+    "Self Harm": ["suicide", "die", "cut", "self-harm"]
 }
 
 CATEGORY_WEIGHT = {
@@ -25,10 +44,8 @@ CATEGORY_WEIGHT = {
     "Self Harm": 45
 }
 
-BLUR_THRESHOLD = 20
-
-# ---------------- AI FUNCTIONS ----------------
-def analyze_text_ai(text):
+# ---------------- TEXT ANALYSIS ----------------
+def analyze_text(text):
     tokens = word_tokenize(text.lower())
     score = 0
     tags = []
@@ -39,118 +56,135 @@ def analyze_text_ai(text):
             tags.append(category)
             score += min(count * CATEGORY_WEIGHT[category], CATEGORY_WEIGHT[category])
 
-    return score, tags
+    return min(score, 100), tags
 
-def analyze_audio_proxy(filename):
-    score = 0
-    tags = []
+# ---------------- IMAGE ANALYSIS (CLIP) ----------------
+IMAGE_PROMPTS = {
+    "Violence": [
+        "people fighting violently",
+        "a physical assault",
+        "a person attacking another person"
+    ],
+    "Blood": [
+        "visible blood injury",
+        "a person bleeding"
+    ],
+    "Safe": [
+        "a peaceful nature landscape",
+        "a calm outdoor scene",
+        "a safe normal photograph"
+    ]
+}
 
-    name = filename.lower()
+def analyze_image(image_path):
+    image = clip_preprocess(Image.open(image_path).convert("RGB")).unsqueeze(0).to(DEVICE)
 
-    if any(w in name for w in ["angry", "fight", "shout", "scream"]):
-        score += 30
-        tags.append("Aggressive Audio")
+    texts, labels = [], []
+    for label, prompts in IMAGE_PROMPTS.items():
+        for p in prompts:
+            texts.append(p)
+            labels.append(label)
 
-    if any(w in name for w in ["blood", "violence", "attack"]):
-        score += 40
-        tags.append("Violence")
+    text_tokens = clip.tokenize(texts).to(DEVICE)
 
-    if any(w in name for w in ["hate", "abuse"]):
-        score += 25
-        tags.append("Harassment")
+    with torch.no_grad():
+        img_features = clip_model.encode_image(image)
+        txt_features = clip_model.encode_text(text_tokens)
 
-    return score, tags
+        img_features /= img_features.norm(dim=-1, keepdim=True)
+        txt_features /= txt_features.norm(dim=-1, keepdim=True)
 
+        similarities = (img_features @ txt_features.T).squeeze(0)
 
-def analyze_filename_proxy(filename):
-    score = 0
-    tags = []
+    scores = {}
+    for i, label in enumerate(labels):
+        scores[label] = max(scores.get(label, -1), similarities[i].item())
 
-    name = filename.lower()
-    if any(w in name for w in ["blood", "gun", "fight", "war"]):
-        score += 35
-        tags.append("Violence")
+    scores = {k: round((v + 1) / 2, 3) for k, v in scores.items()}
 
-    return score, tags
+    danger_score = max(scores.get("Violence", 0), scores.get("Blood", 0))
+    safe_score = scores.get("Safe", 0)
 
+    blur_required = danger_score > 0.6 and danger_score > safe_score
 
+    return scores, blur_required
+
+# ---------------- BLUR ----------------
 def blur_image(path):
     img = Image.open(path)
-    blurred = img.filter(ImageFilter.GaussianBlur(radius=12))
-    blurred_path = path.replace(".", "_blur.")
-    blurred.save(blurred_path)
-    return blurred_path
-
-
-def generate_summary(score, tags):
-    if score < 30:
-        return "No significant harmful indicators detected. Content appears safe."
-    elif score < 70:
-        return f"Moderate risk detected related to {', '.join(tags)}. Viewer discretion advised."
-    else:
-        return f"High-risk content detected involving {', '.join(tags)}. Content preview blurred for safety."
+    blurred = img.filter(ImageFilter.GaussianBlur(radius=16))
+    blur_path = path.replace(".", "_blur.")
+    blurred.save(blur_path)
+    return blur_path
 
 # ---------------- ROUTES ----------------
-@app.route("/", methods=["GET"])
-def health():
-    return jsonify({
-        "status": "running",
-        "service": "MindGuard AI",
-        "mode": "Real-time AI safety screening"
-    })
-
-
-@app.route("/uploads/<path:filename>")
-def serve_file(filename):
+@app.route("/uploads/<filename>")
+def get_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
-
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
     file = request.files.get("file")
-    text = request.form.get("text", "")
+    text_input = request.form.get("text", "").strip()
 
-    total_score = 0
-    tags = []
-    blur_required = False
+    transcript = ""
 
-    original_path = None
-    blurred_path = None
+    # -------- AUDIO --------
+    if file and file.filename.lower().endswith((".mp3", ".wav", ".m4a")):
+        path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(path)
 
-    # -------- TEXT ANALYSIS --------
-    if text.strip():
-        text_score, text_tags = analyze_text_ai(text)
-        total_score += text_score
-        tags.extend(text_tags)
+        try:
+            result = asr_model.transcribe(path, fp16=False)
+            transcript = result["text"]
+        except Exception as e:
+            return jsonify({
+                "error": "Audio transcription failed",
+                "details": str(e)
+            }), 500
 
-    # -------- FILE ANALYSIS --------
-    if file:
-        original_path = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(original_path)
+        risk_score, tags = analyze_text(transcript)
 
-        file_score, file_tags = analyze_filename_proxy(file.filename)
-        total_score += file_score
-        tags.extend(file_tags)
+        return jsonify({
+            "risk_score": risk_score,
+            "risk_level": "High" if risk_score >= 70 else "Medium" if risk_score >= 30 else "Low",
+            "summary": "Potentially harmful content detected" if risk_score >= 30 else "Content appears safe",
+            "tags": tags,
+            "transcribed_text": transcript,
+            "ai_explanation": "Audio transcribed using Whisper ASR and analyzed using NLP-based risk scoring"
+        })
 
-        if total_score >= BLUR_THRESHOLD:
-            blurred_path = blur_image(original_path)
-            blur_required = True
+    # -------- IMAGE --------
+    if file and file.filename.lower().endswith((".jpg", ".jpeg", ".png")):
+        path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(path)
 
-    total_score = min(total_score, 100)
-    tags = list(set(tags))
+        scores, blur_required = analyze_image(path)
+        blurred_path = blur_image(path) if blur_required else None
 
-    response = {
-        "risk_score": total_score,
-        "risk_level": "Low" if total_score < 30 else "Medium" if total_score < 70 else "High",
-        "tags": tags,
-        "blur_required": blur_required,
-        "original_preview_url": f"/uploads/{os.path.basename(original_path)}" if original_path else None,
-        "blurred_preview_url": f"/uploads/{os.path.basename(blurred_path)}" if blurred_path else None,
-        "summary": generate_summary(total_score, tags),
-        "ai_explanation": "Risk computed using NLP keyword analysis and multi-modal safety fusion"
-    }
+        return jsonify({
+            "blur_required": blur_required,
+            "image_scores": scores,
+            "original_preview_url": f"/uploads/{file.filename}",
+            "blurred_preview_url": f"/uploads/{os.path.basename(blurred_path)}" if blurred_path else None,
+            "summary": "Potentially harmful visual content detected" if blur_required else "Image appears safe",
+            "ai_explanation": "Image analyzed using CLIP semantic similarity"
+        })
 
-    return jsonify(response)
+    # -------- TEXT --------
+    if text_input:
+        risk_score, tags = analyze_text(text_input)
+
+        return jsonify({
+            "risk_score": risk_score,
+            "risk_level": "High" if risk_score >= 70 else "Medium" if risk_score >= 30 else "Low",
+            "summary": "Potentially harmful content detected" if risk_score >= 30 else "Content appears safe",
+            "tags": tags,
+            "transcribed_text": text_input,
+            "ai_explanation": "Text analyzed using NLP-based risk scoring"
+        })
+
+    return jsonify({"error": "Unsupported or empty input"}), 400
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
