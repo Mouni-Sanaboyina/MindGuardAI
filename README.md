@@ -1,162 +1,211 @@
-🛡️ MindGuardAI – AI Content Moderation Platform
+# 🛡️ MindGuardAI – AI Content Moderation Platform
 
-MindGuardAI is a multi-modal AI system designed to detect and moderate harmful content across text, audio, and images. It mimics real-world moderation pipelines used by platforms like YouTube and social media.
+MindGuardAI is a **multi-modal AI system** designed to detect and moderate harmful content across **text, audio, and images**. It mimics real-world moderation systems used by platforms like YouTube and social media.
 
-🚀 Features
+---
 
-📝 Text Moderation
+## 🚀 Features
 
-Detects harmful or sensitive content using NLP-based risk scoring
+- 📝 **Text Moderation**
+  - Detects harmful or sensitive content using NLP-based risk scoring
+  - Categories: Violence, Harassment, Self-harm
 
-Categorizes into: Violence, Harassment, Self-harm
+- 🎤 **Audio Moderation**
+  - Converts speech to text using **Whisper ASR**
+  - Applies NLP analysis on transcribed content
 
-🎤 Audio Moderation
+- 🖼️ **Image Moderation**
+  - Uses **CLIP (Vision-Language Model)** for semantic understanding
+  - Detects violent or sensitive visuals
+  - Applies **automatic blur** with safe-view toggle
 
-Converts speech to text using Whisper ASR
+- ⚠️ **Risk Scoring System**
+  - Generates risk score (0–100)
+  - Classifies as Low / Medium / High risk
 
-Applies NLP analysis on transcribed content
+- 🌐 **Full-Stack Web Application**
+  - Interactive UI with real-time results
 
-🖼️ Image Moderation
+---
 
-Uses CLIP (Vision-Language Model) for semantic understanding
+## 🧠 Tech Stack
 
-Detects violent or sensitive visuals
+### Frontend
+- React (TypeScript)
+- Tailwind CSS
+- Vite
 
-Applies automatic blur with safe-view toggle
+### Backend
+- Python (Flask)
+- Whisper (Speech-to-Text)
+- CLIP (Image Moderation)
+- NLTK (Text Processing)
+- PyTorch
 
-⚠️ Risk Scoring System
+### Deployment
+- Frontend: Vercel
+- Backend: Render / Hugging Face / Cloud platforms
 
-Generates risk score (0–100)
+---
 
-Classifies as Low / Medium / High risk
+## 🏗️ Project Structure
+# 🛡️ MindGuardAI – AI Content Moderation Platform
 
-🌐 Full-Stack Web App
+MindGuardAI is a **multi-modal AI system** designed to detect and moderate harmful content across **text, audio, and images**. It mimics real-world moderation systems used by platforms like YouTube and social media.
 
-Frontend: React + Tailwind CSS
+---
 
-Backend: Flask + AI models
+## 🚀 Features
 
-🧠 Tech Stack
-Frontend
+- 📝 **Text Moderation**
+  - Detects harmful or sensitive content using NLP-based risk scoring
+  - Categories: Violence, Harassment, Self-harm
 
-React (TypeScript)
+- 🎤 **Audio Moderation**
+  - Converts speech to text using **Whisper ASR**
+  - Applies NLP analysis on transcribed content
 
-Tailwind CSS
+- 🖼️ **Image Moderation**
+  - Uses **CLIP (Vision-Language Model)** for semantic understanding
+  - Detects violent or sensitive visuals
+  - Applies **automatic blur** with safe-view toggle
 
-Vite
+- ⚠️ **Risk Scoring System**
+  - Generates risk score (0–100)
+  - Classifies as Low / Medium / High risk
 
-Backend
+- 🌐 **Full-Stack Web Application**
+  - Interactive UI with real-time results
 
-Python (Flask)
+---
 
-Whisper (Speech-to-Text)
+## 🧠 Tech Stack
 
-CLIP (Image Moderation)
+### Frontend
+- React (TypeScript)
+- Tailwind CSS
+- Vite
 
-NLTK (Text Processing)
+### Backend
+- Python (Flask)
+- Whisper (Speech-to-Text)
+- CLIP (Image Moderation)
+- NLTK (Text Processing)
+- PyTorch
 
-PyTorch
+### Deployment
+- Frontend: Vercel
+- Backend: Render / Hugging Face / Cloud platforms
 
-Deployment
+---
 
-Frontend: Vercel
+## 🏗️ Project Structure
 
-Backend: Render (or scalable cloud services)
-
-🏗️ Project Structure
 mindguardai/
 ├── backend/
-│   ├── app.py
-│   ├── requirements.txt
-│   └── uploads/
+│ ├── app.py
+│ ├── requirements.txt
+│ └── uploads/
 │
 ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── ...
+│ ├── components/
+│ ├── pages/
+│ └── ...
 │
 ├── package.json
 ├── vite.config.ts
 └── README.md
-⚙️ How It Works
 
-User uploads content (text/audio/image)
 
-Backend processes input:
+---
 
-Audio → Whisper → Text → NLP
+## ⚙️ How It Works
 
-Image → CLIP → Risk detection
+1. User uploads content (text / audio / image)
+2. Backend processes input:
+   - Audio → Whisper → Text → NLP
+   - Image → CLIP → Risk detection
+   - Text → NLP analysis
+3. System generates:
+   - Risk score
+   - Category tags
+   - Safe / Unsafe classification
+4. UI displays:
+   - Alerts
+   - Blurred previews (for unsafe images)
+   - Explanation of results
 
-Text → NLP analysis
+---
 
-System generates:
+## 🛠️ Setup Instructions
 
-Risk score
+### 1. Clone Repository
 
-Category tags
+git clone https://github.com/Mouni-Sanaboyina/MindGuardAI/
 
-Safe / Unsafe classification
-
-UI displays:
-
-Alerts
-
-Blurred previews (for unsafe images)
-
-Detailed explanation
-
-🛠️ Setup Instructions
-1️⃣ Clone Repository
-git clone https://github.com/your-username/mindguardai.git
 cd mindguardai
-2️⃣ Backend Setup
+
+https://github.com/Mouni-Sanaboyina/MindGuardAI/
+
+
+---
+
+### 2. Backend Setup
+
 cd backend
 pip install -r requirements.txt
 python app.py
-3️⃣ Frontend Setup
+
+
+---
+
+### 3. Frontend Setup
+
 npm install
 npm run dev
-4️⃣ Open App
+
+---
+
+### 4. Run Application
+Open:
+
 http://localhost:5173
-🌍 Deployment
-Frontend
 
-Deploy on Vercel
 
-Backend
+---
 
-Deploy on Render / Hugging Face / AWS
+## 🌍 Deployment
 
-⚠️ Limitations
+- Frontend → Vercel
+- Backend → Render / Hugging Face / Cloud services
 
-Free cloud tiers have memory limits (ML models are heavy)
+---
 
-Whisper + CLIP cannot run together on low-memory instances
+## ⚠️ Limitations
 
-Requires service separation for production scaling
+- Free cloud tiers have memory limitations
+- Heavy ML models (Whisper, CLIP) require optimization or separation
+- Initial loading time may be high
 
-🔮 Future Improvements
+---
 
-🎥 Video moderation (frame extraction + audio analysis)
+## 🔮 Future Improvements
 
-☁️ Microservices architecture for scalability
+- 🎥 Video moderation (frame extraction + audio analysis)
+- ☁️ Microservices architecture for scalability
+- 🔐 User authentication
+- 📊 Analytics dashboard
+- ⚡ Lightweight optimized models
 
-🔐 User authentication & dashboard
+---
 
-📊 Analytics for content safety trends
+## 👩‍💻 Author
 
-⚡ Optimized lightweight models
+**Mounika Sanaboyina**  
+B.Tech – Computer Science (AI & Data Science)
 
-🤝 Contributing
+---
 
-Contributions are welcome! Feel free to fork the repo and submit PRs.
+## ⭐ Support
 
-📌 Author
-
-Mounika Sanaboyina
-Computer Science (AI & Data Science)
-
-⭐ Show Your Support
-
-If you like this project, please ⭐ the repo!
+If you found this project useful, consider giving it a ⭐ on GitHub!
