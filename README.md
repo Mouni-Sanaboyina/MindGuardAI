@@ -141,7 +141,7 @@ The platform produces:
 ## Moderation Pipeline
 
 ### Text
-
+```
 Text Input
 
 ↓
@@ -185,11 +185,11 @@ Risk Score
 ↓
 
 Moderation Report
-
+```
 ---
 
 ### Image
-
+```
 Image
 
 ↓
@@ -215,11 +215,11 @@ Risk Score
 ↓
 
 Moderation Report
-
+```
 ---
 
 ## System Architecture
-
+```
 React Frontend
 
 ↓
@@ -251,11 +251,11 @@ Risk Assessment Engine
 ↓
 
 Safety Report
-
+```
 ---
 
 ## Project Structure
-
+```
 MindGuardAI
 
 ├── backend
@@ -295,7 +295,7 @@ MindGuardAI
 │
 
 └── README.md
-
+```
 ---
 
 ## Getting Started
