@@ -426,10 +426,8 @@ https://github.com/Mouni-Sanaboyina
 Project:
 https://github.com/Mouni-Sanaboyina/MindGuardAI
 
-If you found this project useful, consider giving the repository a ⭐ on GitHub.
-
 ---
 
-## About
+If you found this project useful, consider giving the repository a ⭐ on GitHub.
 
-MindGuardAI is a multi-modal AI content moderation platform that combines NLP, Speech AI, Computer Vision, and LLM reasoning to detect harmful content across text, audio, and image inputs with explainable risk scoring and automated safety reporting.
+
