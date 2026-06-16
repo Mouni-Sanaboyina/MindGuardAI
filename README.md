@@ -1,132 +1,318 @@
-# 🛡️ MindGuard AI
+# MindGuardAI — Multi-Modal AI Content Moderation Platform
 
-### Multi-Modal Harmful Content Detection System
+A full-stack AI-powered content moderation platform that analyzes text, audio, and image content to detect harmful, toxic, violent, NSFW, and unsafe material. MindGuardAI combines NLP, Speech AI, Computer Vision, and LLM reasoning into a unified moderation pipeline that generates explainable risk assessments and safety reports.
 
-MindGuard AI is a multi-modal content moderation platform that automatically detects harmful content across **Text, Audio, and Images** using Machine Learning, Computer Vision, Speech AI, and Large Language Models.
-
-The system is designed to assist social media platforms, online communities, educational platforms, and content-sharing applications in identifying toxic, unsafe, and inappropriate content before publication.
+📦 **Repository:** https://github.com/Mouni-Sanaboyina/MindGuardAI
 
 ---
 
-## 🚀 Features
+## Table of Contents
 
-### 📝 Text Moderation
-
-* Toxicity Detection
-* Hate Speech Detection
-* Harassment Detection
-* Profanity Analysis
-* Threat Identification
-* Risk Scoring
-
-### 🎤 Audio Moderation
-
-* Speech-to-Text using Whisper Large V3
-* Toxicity Analysis on Transcribed Content
-* Harmful Speech Detection
-* Automated Moderation Reports
-
-### 🖼️ Image Moderation
-
-* NSFW Content Detection using NudeNet
-* Image Caption Generation using BLIP
-* Visual Content Understanding using CLIP
-* GPT-based Risk Assessment
-* Adult Content Detection
-* Dangerous Activity Detection
-* Violence Detection
+* Overview
+* Features
+* Technology Stack
+* Moderation Pipeline
+* System Architecture
+* Project Structure
+* Getting Started
+* Environment Variables
+* Deployment
+* API Endpoints
+* Key Highlights
+* Future Enhancements
+* Author
 
 ---
 
-## 🏗️ System Architecture
+## Overview
 
-User Content
-↓
-Text / Audio / Image Upload
-↓
-AI Processing Pipeline
-↓
-Detoxify / Whisper / NudeNet / CLIP
-↓
-GPT-4.1-mini Risk Analysis
-↓
-Risk Score Generation
-↓
-Moderation Report
+MindGuardAI is a multi-modal content moderation platform designed to help digital platforms automatically detect unsafe content across multiple content types.
 
----
+The system accepts text, audio, and image inputs and performs safety analysis using specialized AI models.
 
-## 🧠 AI Models Used
+Instead of relying on a single classifier, MindGuardAI combines multiple AI systems:
 
-| Component           | Technology       |
-| ------------------- | ---------------- |
-| Text Moderation     | Detoxify         |
-| Speech Recognition  | Whisper Large V3 |
-| Image Moderation    | NudeNet          |
-| Image Understanding | CLIP             |
-| Image Captioning    | BLIP             |
-| AI Reasoning        | GPT-4.1-mini     |
-| Backend API         | FastAPI          |
-| Frontend            | React + Vite     |
+* Detoxify for toxicity detection
+* Whisper Large V3 for speech transcription
+* BLIP for image understanding
+* CLIP for visual classification
+* NudeNet for NSFW detection
+* GPT-4.1-mini for explainable moderation reasoning
+
+The platform produces:
+
+* Risk Score
+* Category Breakdown
+* Safety Classification
+* Moderation Explanation
+* Recommended Action
 
 ---
 
-## 🛠️ Tech Stack
+## Features
+
+### Text Moderation
+
+* Toxicity detection
+* Hate speech detection
+* Harassment detection
+* Threat detection
+* Obscene content detection
+* Explainable moderation reports
+
+### Audio Moderation
+
+* Speech-to-text transcription
+* Toxicity analysis on transcribed speech
+* Harmful language detection
+* Risk scoring
+
+### Image Moderation
+
+* Image caption generation
+* NSFW content detection
+* Adult content classification
+* Violence assessment
+* Dangerous activity detection
+* Visual risk scoring
+
+### Explainable AI
+
+* Category-wise risk breakdown
+* Human-readable moderation reasoning
+* Confidence-based safety scoring
+* Automated moderation recommendations
+
+### Dashboard Features
+
+* Text analysis
+* Audio analysis
+* Image analysis
+* Risk score visualization
+* Category breakdown charts
+* Moderation history
+* Real-time reports
+
+---
+
+## Technology Stack
 
 ### Frontend
 
 * React
+* TypeScript
+* Tailwind CSS
+* Axios
 * Vite
-* JavaScript
-* Lucide Icons
 
 ### Backend
 
-* FastAPI
 * Python
-* Pydantic
+* FastAPI
+* Uvicorn
 
-### AI & Machine Learning
+### AI Models
+
+#### NLP
 
 * Detoxify
-* PyTorch
-* Transformers
+
+#### Speech AI
+
 * Whisper Large V3
-* NudeNet
+
+#### Computer Vision
+
 * BLIP
 * CLIP
+* NudeNet
+
+#### LLM Reasoning
+
+* Azure OpenAI GPT-4.1-mini
+
+### Cloud Services
+
 * Azure OpenAI
+* Groq API
 
 ---
 
-## 📂 Project Structure
+## Moderation Pipeline
 
-```text
-MindGuard-AI
-│
+### Text
+
+Text Input
+
+↓
+
+Detoxify
+
+↓
+
+Toxicity Categories
+
+↓
+
+Risk Score
+
+↓
+
+Moderation Report
+
+---
+
+### Audio
+
+Audio File
+
+↓
+
+Whisper Large V3
+
+↓
+
+Transcript
+
+↓
+
+Detoxify
+
+↓
+
+Risk Score
+
+↓
+
+Moderation Report
+
+---
+
+### Image
+
+Image
+
+↓
+
+BLIP Caption Generation
+
+↓
+
+CLIP Visual Classification
+
+↓
+
+NudeNet NSFW Detection
+
+↓
+
+GPT-4.1-mini Reasoning
+
+↓
+
+Risk Score
+
+↓
+
+Moderation Report
+
+---
+
+## System Architecture
+
+React Frontend
+
+↓
+
+FastAPI Backend
+
+↓
+
+Content Processing Layer
+
+├── Detoxify
+
+├── Whisper Large V3
+
+├── BLIP
+
+├── CLIP
+
+└── NudeNet
+
+↓
+
+GPT-4.1-mini
+
+↓
+
+Risk Assessment Engine
+
+↓
+
+Safety Report
+
+---
+
+## Project Structure
+
+MindGuardAI
+
 ├── backend
-│   ├── core
-│   ├── routers
-│   ├── services
-│   ├── main.py
-│   └── requirements.txt
-│
-├── frontend
-│   ├── src
-│   ├── public
-│   ├── package.json
-│   └── vite.config.js
-│
-└── README.md
-```
 
-## ⚙️ Installation
+│ ├── services
+
+│ │ ├── moderation_service.py
+
+│ │ ├── clip_service.py
+
+│ │ └── ai_service.py
+
+│ │
+
+│ ├── routes
+
+│ ├── core
+
+│ ├── models
+
+│ └── main.py
+
+│
+
+├── frontend
+
+│ ├── src
+
+│ │ ├── components
+
+│ │ ├── pages
+
+│ │ ├── services
+
+│ │ └── App.tsx
+
+│
+
+└── README.md
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+* Python 3.10+
+* Node.js 18+
+* Azure OpenAI Account
+* Groq API Key
 
 ### Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/MindGuard-AI.git
-cd MindGuard-AI
+git clone https://github.com/Mouni-Sanaboyina/MindGuardAI.git
+
+cd MindGuardAI
 ```
 
 ### Backend Setup
@@ -137,37 +323,23 @@ cd backend
 pip install -r requirements.txt
 ```
 
-Create a `.env` file:
+Create `.env`
 
 ```env
-AZURE_OPENAI_API_KEY=your_key
+AZURE_OPENAI_API_KEY=
 
-AZURE_OPENAI_ENDPOINT=your_endpoint
+AZURE_OPENAI_ENDPOINT=
 
 AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4.1-mini
 
-GROQ_API_KEY=your_groq_key
+GROQ_API_KEY=
 ```
 
-Run Backend:
+Run Backend
 
 ```bash
 uvicorn main:app --reload
 ```
-
-Backend URL:
-
-```text
-http://localhost:8000
-```
-
-API Documentation:
-
-```text
-http://localhost:8000/docs
-```
-
----
 
 ### Frontend Setup
 
@@ -179,73 +351,85 @@ npm install
 npm run dev
 ```
 
-Frontend URL:
+---
 
-```text
-http://localhost:5173
-```
+## API Endpoints
+
+### Text Moderation
+
+POST /api/analyze/text
+
+### Audio Moderation
+
+POST /api/analyze/audio
+
+### Image Moderation
+
+POST /api/analyze/image
+
+### Health Check
+
+GET /api/health
 
 ---
 
-## 📊 Sample Output
+## Key Highlights
 
-```json
-{
-  "content_type": "text",
-  "risk_score": 82,
-  "risk_level": "high",
-  "flagged": true,
-  "recommended_action": "Block Content",
-  "categories": {
-    "hate_speech": 78,
-    "harassment": 82,
-    "violence": 12
-  }
-}
-```
+✔ Multi-Modal AI Moderation
 
----
+✔ NLP + Speech AI + Computer Vision
 
-## 🎯 Applications
+✔ Detoxify Integration
 
-* Social Media Moderation
-* Community Management
-* Educational Platforms
-* Content Review Systems
-* Online Forums
-* Enterprise Safety Monitoring
-* User Generated Content Platforms
+✔ Whisper Large V3 Integration
+
+✔ BLIP Image Captioning
+
+✔ CLIP Visual Classification
+
+✔ NudeNet NSFW Detection
+
+✔ GPT-4.1-mini Explainable Reasoning
+
+✔ Automated Risk Scoring
+
+✔ Real-Time Moderation Reports
+
+✔ Full-Stack React + FastAPI Platform
 
 ---
 
-## 🔒 Security Note
+## Future Enhancements
 
-API keys and credentials should never be committed to GitHub. Store all secrets using environment variables.
-
----
-
-## 🌟 Future Enhancements
-
-* Video Moderation
-* Real-time Streaming Analysis
-* Dashboard Analytics
-* User Management
-* Multi-language Support
-* Human Review Workflow
-* Explainable AI Reports
+* Video moderation support
+* Frame-level violence detection
+* OCR-based text extraction
+* Hate symbol detection
+* Real-time streaming moderation
+* RAG-powered policy explanations
+* Human review workflow
+* Analytics dashboard
+* Multi-language moderation
+* Enterprise moderation APIs
 
 ---
 
-## 👩‍💻 Author
+## Author
 
 **Mounika Sanaboyina**
 
 B.Tech – Computer Science (AI & Data Science)
 
-Passionate about Machine Learning, AI Systems, NLP, Computer Vision, and Responsible AI.
+GitHub:
+https://github.com/Mouni-Sanaboyina
+
+Project:
+https://github.com/Mouni-Sanaboyina/MindGuardAI
+
+If you found this project useful, consider giving the repository a ⭐ on GitHub.
 
 ---
 
-## 📜 License
+## About
 
-This project is intended for educational, research, and demonstration purposes.
+MindGuardAI is a multi-modal AI content moderation platform that combines NLP, Speech AI, Computer Vision, and LLM reasoning to detect harmful content across text, audio, and image inputs with explainable risk scoring and automated safety reporting.
